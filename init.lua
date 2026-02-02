@@ -593,16 +593,12 @@ require('lazy').setup({
       --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
       --  See `:help lsp-config` for information about keys and how to configure
       local servers = {
-        -- clangd = {},
-        -- gopls = {},
-        -- pyright = {},
-        -- rust_analyzer = {},
-        --
-        -- Some languages (like typescript) have entire language plugins that can be useful:
-        --    https://github.com/pmizio/typescript-tools.nvim
-        --
-        -- But for many setups, the LSP (`ts_ls`) will work just fine
-        -- ts_ls = {},
+        -- gopls = {},          -- uncomment when Go is installed
+        pyright = {},
+        -- rust_analyzer = {},   -- uncomment when Rust is installed
+        ts_ls = {},
+        html = {},
+        cssls = {},
       }
 
       -- Ensure the servers and tools above are installed
@@ -612,13 +608,22 @@ require('lazy').setup({
       --    :Mason
       --
       -- You can press `g?` for help in this menu.
-      local ensure_installed = vim.tbl_keys(servers or {})
-      vim.list_extend(ensure_installed, {
-        --'lua_ls', -- Lua Language server
-        'lua-language-server', --working Lua Language server name, because Mason package names use kebab-case
-        'stylua', -- Used to format Lua code
-        -- You can add other tools here that you want Mason to install
-      })
+      -- Mason package names differ from LSP names, so we list them explicitly
+      local ensure_installed = {
+        -- LSP servers
+        'lua-language-server',
+        'pyright',
+        'typescript-language-server', -- LSP name: ts_ls
+        'html-lsp', -- LSP name: html
+        'css-lsp', -- LSP name: cssls
+        -- 'gopls',              -- uncomment when Go is installed
+        -- 'rust-analyzer',      -- uncomment when Rust is installed
+        -- Formatters
+        'stylua',
+        'prettier',
+        'black',
+        -- 'goimports',          -- uncomment when Go is installed
+      }
 
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -687,11 +692,12 @@ require('lazy').setup({
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
-        -- Conform can also run multiple formatters sequentially
-        -- python = { "isort", "black" },
-        --
-        -- You can use 'stop_after_first' to run the first available formatter from the list
-        -- javascript = { "prettierd", "prettier", stop_after_first = true },
+        python = { 'black' },
+        javascript = { 'prettier' },
+        html = { 'prettier' },
+        css = { 'prettier' },
+        -- go = { 'goimports' },   -- uncomment when Go is installed
+        -- rust = { 'rustfmt' },   -- uncomment when Rust is installed
       },
     },
   },
@@ -853,11 +859,12 @@ require('lazy').setup({
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
     config = function()
-      local filetypes = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' }
+      local filetypes =
+        { 'bash', 'c', 'css', 'diff', 'go', 'html', 'javascript', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'python', 'query', 'rust', 'vim', 'vimdoc' }
       require('nvim-treesitter').install(filetypes)
       vim.api.nvim_create_autocmd('FileType', {
         pattern = filetypes,
-        callback = function() vim.treesitter.start() end,
+        callback = function() pcall(vim.treesitter.start) end,
       })
     end,
   },
@@ -911,4 +918,4 @@ require('lazy').setup({
 })
 
 -- The line beneath this is called `modeline`. See `:help modeline`
--- vim: ts=2 sts=2 sw=2 et
+-
